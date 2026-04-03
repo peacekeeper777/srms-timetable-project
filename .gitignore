@@ -1,2 +1,9 @@
 node_modules/
 .env
+# Ignore environment variables in subfolders
+backend/.env
+frontend/.env
+
+# (Optional but recommended) Make sure you are also ignoring these!
+backend/node_modules/
+frontend/node_modules/

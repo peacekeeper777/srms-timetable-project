@@ -4,16 +4,13 @@ const timetableSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
+    required: true,
   },
-  day: String,
-  slot: String,
-  subject: String,
-  teacher: String,
-  room: String,
-  type: {
-    type: String,
-    default: "LECTURE", // LECTURE | LAB | FREE
-  },
+  day: { type: String, required: true },
+  slot: { type: String, required: true },
+  subject: { type: String, required: true },
+  teacher: { type: String, required: true },
+  room: { type: String, required: true },
 });
 
 module.exports = mongoose.model("Timetable", timetableSchema);
