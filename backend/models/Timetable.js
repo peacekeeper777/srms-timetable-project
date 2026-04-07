@@ -1,16 +1,21 @@
 const mongoose = require("mongoose");
 
-const timetableSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  day: { type: String, required: true },
-  slot: { type: String, required: true },
-  subject: { type: String, required: true },
-  teacher: { type: String, required: true },
-  room: { type: String, required: true },
+const SlotSchema = new mongoose.Schema({
+  day: String,
+  period: Number,
+  subject: String,
+  teacher: String,
+  room: String,
 });
 
-module.exports = mongoose.model("Timetable", timetableSchema);
+const TimetableSchema = new mongoose.Schema({
+  className: { type: String, required: true },
+  semester: String,
+  slots: [SlotSchema],
+  aiExplanation: { type: String },
+  aiSuggestions: [{ type: String }],
+  conflicts: [{ type: String }],
+  generatedAt: { type: Date, default: Date.now },
+});
+
+module.exports = mongoose.model("Timetable", TimetableSchema);
