@@ -11,6 +11,12 @@ const SlotSchema = new mongoose.Schema({
 const TimetableSchema = new mongoose.Schema({
   className: { type: String, required: true },
   semester: String,
+  userId: String,
+  day: String,
+  slot: Number,
+  subject: String,
+  teacher: String,
+  room: String,
   slots: [SlotSchema],
   aiExplanation: { type: String },
   aiSuggestions: [{ type: String }],

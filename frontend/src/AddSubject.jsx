@@ -1,69 +1,159 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { ArrowLeft, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "./utils/api";
+import { getStoredUser } from "./utils/auth";
 
 function AddSubject() {
   const navigate = useNavigate();
-  // Safe parsing to prevent application crash if user is not logged in
-  const user = JSON.parse(localStorage.getItem("user")) || null;
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const user = getStoredUser();
 
   const [form, setForm] = useState({
-    day: "Monday", // Default select values to prevent empty strings
-    slot: "1",     
+    day: "Monday",
+    slot: 1,
+    className: "",
     subject: "",
     teacher: "",
     room: "",
   });
 
-  // Redirect to login if user object doesn't exist
   useEffect(() => {
     if (!user || !user._id) {
-      alert("Please log in to add subjects.");
-      navigate("/login"); // Adjust route to your actual login page
+      navigate("/login");
     }
   }, [user, navigate]);
 
+  const updateForm = (field, value) => {
+    setForm((current) => ({ ...current, [field]: value }));
+  };
+
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent page reload
+    e.preventDefault();
+    setError("");
     if (!user?._id) return;
 
+    setLoading(true);
     try {
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-      
-      await axios.post(`${API_URL}/add-slot`, {
+      const payload = {
         ...form,
+        slot: Number(form.slot),
         userId: user._id,
-      });
+      };
 
-      alert("Slot added successfully!");
-      navigate("/timetable"); // Go back to timetable to see updates
+      await axios.post(`${API_URL}/add-slot`, payload);
+      navigate("/timetable");
     } catch (err) {
-      alert(err.response?.data?.message || "Error adding slot");
+      setError(err.response?.data?.message || "Server connection failed.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (!user) return null; // Don't render form if redirecting
+  if (!user) return null;
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>Add New Class</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '300px' }}>
-        <select value={form.day} onChange={(e) => setForm({ ...form, day: e.target.value })}>
-          <option>Monday</option>
-          <option>Tuesday</option>
-          <option>Wednesday</option>
-          <option>Thursday</option>
-          <option>Friday</option>
-        </select>
-        
-        <input placeholder="Slot Number (e.g. 1)" type="number" required value={form.slot} onChange={(e) => setForm({ ...form, slot: e.target.value })} />
-        <input placeholder="Subject" required value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} />
-        <input placeholder="Teacher" required value={form.teacher} onChange={(e) => setForm({ ...form, teacher: e.target.value })} />
-        <input placeholder="Room" required value={form.room} onChange={(e) => setForm({ ...form, room: e.target.value })} />
+    <main className="page">
+      <header className="app-header">
+        <div>
+          <p className="eyebrow">Manual entry</p>
+          <h1 className="title">Add class slot</h1>
+          <p className="subtitle">Create one timetable entry for the selected day and slot.</p>
+        </div>
+        <button className="button button-secondary" onClick={() => navigate("/dashboard")}>
+          <ArrowLeft size={18} />
+          Dashboard
+        </button>
+      </header>
 
-        <button type="submit">Add Slot</button>
-      </form>
-    </div>
+      <section className="content">
+        <form className="card form-card form" onSubmit={handleSubmit}>
+          <div className="form-grid">
+            <div className="field">
+              <label htmlFor="day">Day</label>
+              <select id="day" className="select" value={form.day} onChange={(e) => updateForm("day", e.target.value)}>
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+              </select>
+            </div>
+
+            <div className="field">
+              <label htmlFor="slot">Slot number</label>
+              <input
+                id="slot"
+                className="input"
+                min="1"
+                max="6"
+                type="number"
+                required
+                value={form.slot}
+                onChange={(e) => updateForm("slot", e.target.value)}
+              />
+            </div>
+
+            <div className="field field-full">
+              <label htmlFor="className">Class or section</label>
+              <input
+                id="className"
+                className="input"
+                placeholder="e.g. CSE-3A"
+                required
+                value={form.className}
+                onChange={(e) => updateForm("className", e.target.value)}
+              />
+            </div>
+
+            <div className="field">
+              <label htmlFor="subject">Subject</label>
+              <input
+                id="subject"
+                className="input"
+                placeholder="e.g. Data Structures"
+                required
+                value={form.subject}
+                onChange={(e) => updateForm("subject", e.target.value)}
+              />
+            </div>
+
+            <div className="field">
+              <label htmlFor="teacher">Teacher</label>
+              <input
+                id="teacher"
+                className="input"
+                placeholder="e.g. Dr. Sharma"
+                required
+                value={form.teacher}
+                onChange={(e) => updateForm("teacher", e.target.value)}
+              />
+            </div>
+
+            <div className="field field-full">
+              <label htmlFor="room">Room</label>
+              <input
+                id="room"
+                className="input"
+                placeholder="e.g. Lab-2 or Room 512"
+                required
+                value={form.room}
+                onChange={(e) => updateForm("room", e.target.value)}
+              />
+            </div>
+          </div>
+
+          {error && <p className="error">{error}</p>}
+
+          <button className="button" disabled={loading} type="submit">
+            <Save size={18} />
+            {loading ? "Saving..." : "Save slot"}
+          </button>
+        </form>
+      </section>
+    </main>
   );
 }
 

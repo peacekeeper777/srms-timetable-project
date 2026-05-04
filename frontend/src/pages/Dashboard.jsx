@@ -1,12 +1,21 @@
+import { CalendarPlus, LogOut, Sparkles, Table2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getStoredUser } from "../utils/auth";
 
 function Dashboard() {
   const navigate = useNavigate();
-
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = getStoredUser();
 
   if (!user) {
-    return <h2 style={{ textAlign: "center" }}>No user found. Please login.</h2>;
+    return (
+      <main className="page page-narrow">
+        <div className="card auth-card">
+          <h2>Session expired</h2>
+          <p className="subtitle">Please sign in again to continue.</p>
+          <button className="button" onClick={() => navigate("/login")}>Sign in</button>
+        </div>
+      </main>
+    );
   }
 
   const handleLogout = () => {
@@ -15,89 +24,51 @@ function Dashboard() {
   };
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>
-        Automatic Timetable Generator
-      </h1>
-
-      <div style={styles.card}>
-        <h2>Welcome {user.email}</h2>
-
-        <div style={styles.buttons}>
-          
-          {/* ➕ ADD SUBJECT */}
-          <button
-            style={styles.btn}
-            onClick={() => navigate("/add-subject")}
-          >
-            ➕ Add Subject
-          </button>
-
-          {/* 📅 GENERATE TIMETABLE */}
-          <button
-            style={styles.btn}
-            onClick={() => navigate("/timetable")}
-          >
-            📅 Generate Timetable
-          </button>
-
-          {/* 🔓 LOGOUT */}
-          <button
-            style={styles.logoutBtn}
-            onClick={handleLogout}
-          >
+    <main className="page">
+      <header className="app-header">
+        <div>
+          <p className="eyebrow">Workspace</p>
+          <h1 className="title">Automatic Timetable Generator</h1>
+          <p className="subtitle">Signed in as {user.email}</p>
+        </div>
+        <div className="header-actions">
+          <button className="button button-secondary" onClick={handleLogout}>
+            <LogOut size={18} />
             Logout
           </button>
-
         </div>
-      </div>
-    </div>
+      </header>
+
+      <section className="content dashboard-grid">
+        <article className="card action-card">
+          <CalendarPlus size={26} color="#2563eb" />
+          <h3>Add class slot</h3>
+          <p>Create a manual timetable entry with class, subject, teacher, room, day, and slot.</p>
+          <button className="button" onClick={() => navigate("/add-subject")}>
+            Add slot
+          </button>
+        </article>
+
+        <article className="card action-card">
+          <Table2 size={26} color="#0f766e" />
+          <h3>View timetable</h3>
+          <p>Review saved timetable entries in a clean weekly grid and remove incorrect slots.</p>
+          <button className="button" onClick={() => navigate("/timetable")}>
+            Open timetable
+          </button>
+        </article>
+
+        <article className="card action-card">
+          <Sparkles size={26} color="#7c3aed" />
+          <h3>AI generator</h3>
+          <p>Generate and analyze a timetable using your AI scheduling flow.</p>
+          <button className="button" onClick={() => navigate("/generate")}>
+            Generate with AI
+          </button>
+        </article>
+      </section>
+    </main>
   );
 }
 
 export default Dashboard;
-
-
-
-// 🎨 STYLES
-const styles = {
-  container: {
-    textAlign: "center",
-    marginTop: "100px",
-    fontFamily: "Arial",
-  },
-  title: {
-    marginBottom: "30px",
-  },
-  card: {
-    display: "inline-block",
-    padding: "30px",
-    borderRadius: "10px",
-    boxShadow: "0 0 10px rgba(0,0,0,0.2)",
-    background: "#1e1e2f",
-    color: "white",
-  },
-  buttons: {
-    marginTop: "20px",
-    display: "flex",
-    justifyContent: "center",
-    gap: "10px",
-    flexWrap: "wrap",
-  },
-  btn: {
-    padding: "10px 15px",
-    border: "none",
-    borderRadius: "5px",
-    background: "#4CAF50",
-    color: "white",
-    cursor: "pointer",
-  },
-  logoutBtn: {
-    padding: "10px 15px",
-    border: "none",
-    borderRadius: "5px",
-    background: "#f44336",
-    color: "white",
-    cursor: "pointer",
-  },
-};

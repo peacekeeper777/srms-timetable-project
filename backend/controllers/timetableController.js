@@ -1,41 +1,29 @@
 const Timetable = require("../models/Timetable");
 
 exports.addSlot = async (req, res) => {
-  try {
-    const { userId, day, slot, subject, teacher, room } = req.body;
+    try {
+        const { day, slot, className, subject, teacher, room, userId } = req.body;
 
-    // 1. User Slot Clash: Does this specific student/user already have a class now?
-    const slotExists = await Timetable.findOne({ userId, day, slot });
-    if (slotExists) {
-      return res.status(400).json({ message: "You already have a class scheduled for this time slot." });
+        if (!userId) {
+            return res.status(400).json({ message: "User ID is missing. Please re-login." });
+        }
+
+        if (!day || !slot || !className || !subject || !teacher || !room) {
+            return res.status(400).json({ message: "All slot fields are required." });
+        }
+
+        const existingSlot = await Timetable.findOne({ userId, day, slot: Number(slot) });
+        if (existingSlot) {
+            return res.status(409).json({ message: `${day} Slot ${slot} already has a class. Delete it before adding another.` });
+        }
+
+        const newSlot = new Timetable({ day, slot: Number(slot), className, subject, teacher, room, userId });
+        await newSlot.save();
+
+        res.status(201).json({ message: "Slot added successfully!", data: newSlot });
+    } catch (error) {
+        res.status(500).json({ message: "Database Error: " + error.message });
     }
-
-    // 2. Teacher Clash: Is this teacher already teaching another class right now?
-    const teacherClash = await Timetable.findOne({ teacher, day, slot });
-    if (teacherClash) {
-      return res.status(400).json({ message: `Teacher ${teacher} is already booked for this slot.` });
-    }
-
-    // 3. Room Clash: Is this room already occupied right now?
-    const roomClash = await Timetable.findOne({ room, day, slot });
-    if (roomClash) {
-      return res.status(400).json({ message: `Room ${room} is already in use for this slot.` });
-    }
-
-    // If no clashes, create the slot
-    await Timetable.create({
-      userId,
-      day,
-      slot,
-      subject,
-      teacher,
-      room,
-    });
-
-    res.json({ message: "Slot added successfully" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
 };
 
 exports.getTimetable = async (req, res) => {
@@ -69,4 +57,15 @@ exports.updateSlot = async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+};
+
+exports.getAvailability = async (req, res) => {
+    try {
+        res.status(200).json({
+            availableTeachers: [],
+            availableRooms: []
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Error", error: error.message });
+    }
 };

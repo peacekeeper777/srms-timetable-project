@@ -1,6 +1,5 @@
 const Subject = require("../models/Subject");
 
-// Add subject
 exports.addSubject = async (req, res) => {
   try {
     const { name, teacher, userId } = req.body;
@@ -13,7 +12,6 @@ exports.addSubject = async (req, res) => {
   }
 };
 
-// Get subjects
 exports.getSubjects = async (req, res) => {
   try {
     const subjects = await Subject.find({ userId: req.params.userId });

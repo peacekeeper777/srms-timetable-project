@@ -1,42 +1,63 @@
-const User = require('../models/User');
-const bcrypt = require('bcryptjs');
+const User = require("../models/User");
+const bcrypt = require("bcryptjs");
 
-// Register
 exports.register = async (req, res) => {
-  const { name, email, password } = req.body;
+  try {
+    const { name, email, password } = req.body;
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "Name, email, and password are required." });
+    }
 
-  const user = new User({
-    name,
-    email,
-    password: hashedPassword
-  });
+    const normalizedEmail = email.trim().toLowerCase();
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      return res.status(409).json({ message: "Email is already registered." });
+    }
 
-  await user.save();
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  res.json({ message: "User Registered" });
+    const user = new User({
+      name: name.trim(),
+      email: normalizedEmail,
+      password: hashedPassword,
+    });
+
+    await user.save();
+
+    res.status(201).json({ message: "User Registered" });
+  } catch (err) {
+    res.status(500).json({ message: "Registration failed.", error: err.message });
+  }
 };
 
-// Login
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required." });
+    }
 
-  if (!user) {
-    return res.json({ message: "User not found" });
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
+    if (!user) {
+      return res.status(401).json({ message: "Email is not registered." });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid password." });
+    }
+
+    res.json({
+      message: "Login Successful",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Login failed.", error: err.message });
   }
-
-  const isMatch = await bcrypt.compare(password, user.password);
-
-  if (!isMatch) {
-    return res.json({ message: "Invalid password" });
-  }
-
-  // ✅ VERY IMPORTANT
-  res.json({
-    message: "Login Successful",
-    user: user, // 👈 MUST BE HERE
-  });
 };
